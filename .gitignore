@@ -1,0 +1,15 @@
+#Ignore debian files
+*.deb
+
+#Ignore tgz files
+*.tgz
+*.tar.gz
+*.tar
+
+#Ignore MQ license code
+/lap/
+mqlicense.sh
+
+#Ignore misc
+results
+/unzip*
