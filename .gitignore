@@ -12,4 +12,5 @@ mqlicense.sh
 
 #Ignore misc
 results
+output
 /unzip*
