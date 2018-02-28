@@ -40,8 +40,8 @@ else
 fi
 
 if [ -n "${MQ_USERID}" ]; then 
-  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms768M -Xmx768M -Xmn600M JMSPerfHarness -ms $msgsize -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 10 -sc BasicStats -rl 180 -sw 120 -tc jms.r11.Requestor -iq $requestq -oq $replyq -db 1 -dx 10 -to 30 -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 $persistent_flags $extra -us $userid -pw $password -jm true
+  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms768M -Xmx768M -Xmn600M JMSPerfHarness -ms $msgsize -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 10 -sc BasicStats -rl 180 -sw 120 -tc jms.r11.Requestor -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 $persistent_flags $extra -us $userid -pw $password -jm true
 else
-  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms768M -Xmx768M -Xmn600M JMSPerfHarness -ms $msgsize -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 10 -sc BasicStats -rl 180 -sw 120 -tc jms.r11.Requestor -iq $requestq -oq $replyq -db 1 -dx 10 -to 30 -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 $persistent_flags $extra 
+  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms768M -Xmx768M -Xmn600M JMSPerfHarness -ms $msgsize -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 10 -sc BasicStats -rl 180 -sw 120 -tc jms.r11.Requestor -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 $persistent_flags $extra 
 fi
 
