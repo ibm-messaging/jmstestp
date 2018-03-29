@@ -6,8 +6,8 @@ This repository contains a set of files to help create a Docker image containing
 You will need to seperately download the MQ Client (for which license agreement is required) and copy the following files into the root directory before building your docker image:
 * /lap/
 *  mqlicense.sh
-*  ibmmq-client_9.0.4.0_amd64.deb
-*  ibmmq-runtime_9.0.4.0_amd64.deb
+*  ibmmq-client_9.0.5.0_amd64.deb
+*  ibmmq-runtime_9.0.5.0_amd64.deb
 
 The MQ V9 client can be obtained from:
 http://www-01.ibm.com/support/docview.wss?uid=swg24042176
@@ -63,9 +63,11 @@ An interactive session with the running container can be access by:
 
 `docker -ti <containerID> /bin/bash`
 
-The version of the JMSPerfHarness jar contained in this image was taken on 7th February 2018 and compiled with Java 1.8. The base docker image is IBMs Java 1.8 which uses Ubuntu 16.04. The most up to date JMSPerfHarness code can be found here:
+The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base docker image is IBMs Java 1.8 which uses Ubuntu 16.04. The most up to date JMSPerfHarness code can be found here:
 https://github.com/ot4i/perf-harness
 
 Information on IBM's Java for Docker can be found here:
 https://hub.docker.com/_/ibmjava/
+
+If you have an older version of this repository or PerfHarness, you may find you need the latest update to be able to work with the MQoC service, as this offering requires the MQ client to use CSP authentication when interacting with the QM. See the newly added -jm option.
 

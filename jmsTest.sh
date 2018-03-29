@@ -12,6 +12,7 @@ msgsize=$2
   awk -F ',' '{print $8}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "Write=%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}' >> /home/mqperf/jms/results
   awk -F ',' '{print $9}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "Recv=%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}' >> /home/mqperf/jms/results
   awk -F ',' '{print $10}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "Send=%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}' >> /home/mqperf/jms/results
+  tail -6 /tmp/systemerr | awk -F '=' '{print $2}' | awk '{total+=$1} END{printf "QM_CPU=%0.2f\n",(NR?(total/NR):-1)}' >> /home/mqperf/cph/results
   echo "" >> /home/mqperf/jms/results
 }
 
@@ -57,6 +58,13 @@ fi
 #Launch monitoring processes
 mpstat 10 > /tmp/mpstat &
 dstat --output /tmp/dstat 10 > /dev/null 2>&1 &
+if [ -n "${MQ_USERID}" ]; then
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/system 2>/tmp/systemerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/disklog 2>/tmp/disklogerr &
+else
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary >/tmp/system 2>/tmp/systemerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log >/tmp/disklog 2>/tmp/disklogerr &
+fi
 
 echo "----------------------------------------"
 echo "Starting JMS tests----------------------"
