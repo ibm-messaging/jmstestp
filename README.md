@@ -6,11 +6,13 @@ This repository contains a set of files to help create a Docker image containing
 You will need to seperately download the MQ Client (for which license agreement is required) and copy the following files into the root directory before building your docker image:
 * /lap/
 *  mqlicense.sh
-*  ibmmq-client_9.0.5.0_amd64.deb
-*  ibmmq-runtime_9.0.5.0_amd64.deb
+*  ibmmq-client_9.1.0.0_amd64.deb
+*  ibmmq-runtime_9.1.0.0_amd64.deb
+*  ibmmq-java_9.1.0.0_amd64.deb
 
-The MQ V9 client can be obtained from:
-http://www-01.ibm.com/support/docview.wss?uid=swg24042176
+The MQ V9 client can be obtained from: http://www-01.ibm.com/support/docview.wss?uid=swg24042176
+
+The MQ V9.1 client can be obtained from: http://www-01.ibm.com/support/docview.wss?uid=swg24044791
 
 then perform a docker build as normal:
 
