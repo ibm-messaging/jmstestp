@@ -6,14 +6,45 @@ threads=$1
 msgsize=$2
   echo "threads=$threads" >> /home/mqperf/jms/results
   echo "Starting test with $threads JMS requesters" >> /home/mqperf/jms/output
-  ./jmsreq.sh $threads $msgsize | tee -a /home/mqperf/jms/output | grep totalRate | awk -F ',' '{ print $3 }' >> /home/mqperf/jms/results
-  awk '{print $12}' /tmp/mpstat | tail -6 |  awk '{total+=$1} END{printf "CPU=%0.2f\n",(NR?100-(total/NR):-1)}' >> /home/mqperf/jms/results
-  awk -F ',' '{print $7}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "Read=%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}' >> /home/mqperf/jms/results
-  awk -F ',' '{print $8}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "Write=%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}' >> /home/mqperf/jms/results
-  awk -F ',' '{print $9}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "Recv=%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}' >> /home/mqperf/jms/results
-  awk -F ',' '{print $10}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "Send=%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}' >> /home/mqperf/jms/results
-  tail -6 /tmp/systemerr | awk -F '=' '{print $2}' | awk '{total+=$1} END{printf "QM_CPU=%0.2f\n",(NR?(total/NR):-1)}' >> /home/mqperf/cph/results
+  rate=$(./jmsreq.sh $threads $msgsize | tee -a /home/mqperf/jms/output | grep totalRate | awk -F ',' '{ print $3 }')
+  rate=$(echo $rate | awk -F '=' '{print $2}')
+  echo "avgRate=$rate" >> /home/mqperf/jms/results
+
+  cpu=$(awk '{print $12}' /tmp/mpstat | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?100-(total/NR):-1)}')
+  echo "CPU=$cpu" >> /home/mqperf/jms/results
+
+  readMB=$(awk -F ',' '{print $7}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}')
+  echo "Read=$readMB" >> /home/mqperf/jms/results
+
+  writeMB=$(awk -F ',' '{print $8}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}')
+  echo "Write=$writeMB">> /home/mqperf/jms/results
+
+  recvGbs=$(awk -F ',' '{print $9}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}')
+  echo "Recv=$recvGbs" >> /home/mqperf/jms/results
+
+  sendGbs=$(awk -F ',' '{print $10}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}')
+  echo "Send=$sendGbs" >> /home/mqperf/jms/results
+
+  qmcpu=$(tail -6 /tmp/systemerr | awk -F '=' '{print $2}' | awk '{total+=$1} END{printf "%0.2f\n",(NR?(total/NR):-1)}')
+  echo "QM_CPU=$qmcpu" >> /home/mqperf/jms/results
+
   echo "" >> /home/mqperf/jms/results
+
+  if [ -n "${MQ_RESULTS_CSV}" ]; then
+    msgsize=${msgsize:-2048}
+    echo "$persistent,$msgsize,$threads,$rate,$cpu,$readMB,$writeMB,$recvGbs,$sendGbs,$qmcpu" >> /home/mqperf/jms/results.csv
+  fi
+}
+
+function setupTLS {
+  #Assuming that key.kdb is already present in the default location /opt/mqm/ssl/key.kdb
+  #Assuming currently that kdb is CMS - Not tested yet with PKCS12
+
+  #Override mqclient.ini with SSL Key repository location and reuse count
+  cp /opt/mqm/ssl/mqclient.ini /var/mqm/mqclient.ini
+
+  #Create local CCDT; alternatives are to copy it from Server or host it at http location
+  echo "DEFINE CHANNEL('$channel') CHLTYPE(CLNTCONN) CONNAME('$host($port)') SSLCIPH(${MQ_TLS_CIPHER}) QMNAME($qmname) REPLACE" | /opt/mqm/bin/runmqsc -n
 }
 
 echo "----------------------------------------"
@@ -24,6 +55,13 @@ host="${MQ_QMGR_HOSTNAME:-localhost}"
 port="${MQ_QMGR_PORT:-1420}"
 channel="${MQ_QMGR_CHANNEL:-SYSTEM.DEF.SVRCONN}"
 nonpersistent="${MQ_NON_PERSISTENT:-0}"
+
+# Conversion of MQ_NON_PERSISTENT to persistence for logging purposes
+if [ "${nonpersistent}" = "1" ]; then
+  persistent=0
+else
+  persistent=1
+fi
 
 echo $(date)
 echo $(date) > /home/mqperf/jms/results
@@ -45,14 +83,30 @@ if [ -n "${MQ_JMS_EXTRA}" ]; then
   echo "Extra JMS flags: ${MQ_JMS_EXTRA}" >> /home/mqperf/jms/results
 fi
 
-export MQSERVER="$channel/TCP/$host($port)";
+if [ -n "${MQ_TLS_CIPHER}" ]; then
+  echo "TLS Cipher: ${MQ_TLS_CIPHER}"
+  echo "TLS Cipher: ${MQ_TLS_CIPHER}" >> /home/mqperf/jms/results
+  # Need to complete TLS setup before we try to attach monitors
+  setupTLS
+fi
+
+#Clear queues
+if [ -n "${MQ_TLS_CIPHER}" ]; then
+  #Dont configure MQSERVER envvar for TLS scenarios, will use CCDT
+  #We do need to specify the Key repository location as runmqsc doesnt use mqclient.ini
+  export MQSSLKEYR=/opt/mqm/ssl/key
+else
+  #Configure MQSERVER envvar
+  export MQSERVER="$channel/TCP/$host($port)";
+fi
+
 if [ -n "${MQ_USERID}" ]; then
   # Need to flow userid and password to runmqsc
   echo "Using userid: ${MQ_USERID}" 
   echo "Using userid: ${MQ_USERID}" >> /home/mqperf/jms/results
   echo ${MQ_PASSWORD} > /tmp/clearq.mqsc;
   cat /home/mqperf/jms/clearq.mqsc >> /tmp/clearq.mqsc;  
-  cat /tmp/clearq.mqsc | /opt/mqm/bin/runmqsc -c -u ${MQ_USERID} -w 60 $qmname > /home/mqperf/jms/output;
+  cat /tmp/clearq.mqsc | /opt/mqm/bin/runmqsc -c -u ${MQ_USERID} -w 60 $qmname > /home/mqperf/jms/output 2>&1;
   rm -f /tmp/clearq.mqsc;
 else
   cat /home/mqperf/jms/clearq.mqsc | /opt/mqm/bin/runmqsc -c $qmname > /home/mqperf/jms/output 2>&1;
@@ -62,11 +116,19 @@ fi
 mpstat 10 > /tmp/mpstat &
 dstat --output /tmp/dstat 10 > /dev/null 2>&1 &
 if [ -n "${MQ_USERID}" ]; then
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/system 2>/tmp/systemerr &
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/disklog 2>/tmp/disklogerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} >/tmp/system 2>/tmp/systemerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} >/tmp/disklog 2>/tmp/disklogerr &
 else
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary >/tmp/system 2>/tmp/systemerr &
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log >/tmp/disklog 2>/tmp/disklogerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -l ${MQ_TLS_CIPHER} >/tmp/system 2>/tmp/systemerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -l ${MQ_TLS_CIPHER} >/tmp/disklog 2>/tmp/disklogerr &
+fi
+
+#Write CSV header if required
+if [ -n "${MQ_RESULTS_CSV}" ]; then
+  msgsize=${msgsize:-2048}
+  printf "# " > /home/mqperf/jms/results.csv
+  echo $(date) >> /home/mqperf/jms/results.csv
+  echo "# Persistence, Msg Size, Threads, Rate (RT/s), Client CPU, IO Read (MB/s), IO Write (MB/s), Net Recv (Gb/s), Net Send (Gb/s), QM CPU" >> /home/mqperf/jms/results.csv
 fi
 
 echo "----------------------------------------"
@@ -108,7 +170,25 @@ runclients 64 204800
 runclients 128 204800
 runclients 200 204800
 echo "" >> /home/mqperf/jms/results
-cat /home/mqperf/jms/results
+
+if ! [ "${MQ_RESULTS}" = "FALSE" ]; then
+  cat /home/mqperf/jms/results
+fi
+
+if [ -n "${MQ_RESULTS_CSV}" ]; then
+  cat /home/mqperf/jms/results.csv
+fi
+
+if [ -n "${MQ_DATA}" ]; then
+  cat /tmp/system
+  cat /tmp/disklog
+  cat /home/mqperf/jms/output
+fi
+
+if [ -n "${MQ_ERRORS}" ]; then
+  cat /var/mqm/errors/AMQERR01.LOG
+fi
+
 echo "----------------------------------------"
 echo "jms testing finished--------------------"
 echo "----------------------------------------"
