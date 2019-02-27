@@ -6,11 +6,13 @@ This repository contains a set of files to help create a Docker image containing
 You will need to seperately download the MQ Client (for which license agreement is required) and copy the following files into the root directory before building your docker image:
 * /lap/
 *  mqlicense.sh
-*  ibmmq-client_9.0.5.0_amd64.deb
-*  ibmmq-runtime_9.0.5.0_amd64.deb
+*  ibmmq-client_9.1.0.0_amd64.deb
+*  ibmmq-runtime_9.1.0.0_amd64.deb
+*  ibmmq-java_9.1.0.0_amd64.deb
 
-The MQ V9 client can be obtained from:
-http://www-01.ibm.com/support/docview.wss?uid=swg24042176
+The MQ V9 client can be obtained from: http://www-01.ibm.com/support/docview.wss?uid=swg24042176
+
+The MQ V9.1 client can be obtained from: http://www-01.ibm.com/support/docview.wss?uid=swg24044791
 
 then perform a docker build as normal:
 
@@ -22,7 +24,7 @@ then run in network host mode to connect and run tests against a local QM:
 
 The default configuration looks for a QM located on the localhost called PERF0 with a listener configured on port 1420. The clients will send and receive persistent messages. You can override a number of options by setting environment variables on the docker run command.
 
-`docker run -it --detach --net="host" --env MQ_QMGR_NAME=PERF1 --env MQ_QMGR_HOSTNAME=10.0.0.1 --env MQ_QMGR_PORT=1414 --env MQ_QMGR_CHANNEL=SYSTEM.DEF.SVRCONN --env MQ_QMGR_QREQUEST_PREFIX=REQUEST --env MQ_QMGR_QREPLY_PREFIX=REPLY jmstestp`
+`docker run -it --detach --net="host" --env MQ_QMGR_NAME=PERF1 --env MQ_QMGR_HOSTNAME=10.0.0.1 --env MQ_QMGR_PORT=1414`
 
 In addition to the hostname, port and and QM name, the default channel can be overidden using the MQ_QMGR_CHANNEL envvar and the queue prefixes used for the testing can be set using MQ_QMGR_QREQUEST_PREFIX and MQ_QMGR_QREPLY_PREFIX.
 
@@ -41,7 +43,10 @@ In the latest release further configuration options have been added. The table b
 | MQ_USERID               | Userid to use when authenticating                    |                    |
 | MQ_PASSWORD             | Password to use when authenticating                  |                    |
 | MQ_JMS_EXTRA            | Additional string field to propogate to jms client   |                    |
-
+| MQ_RESULTS              | Log results to stdout at end of tests                | TRUE               |
+| MQ_RESULTS_CSV          | Log results to csv file and send to stdout at end    | FALSE              |
+| MQ_TLS_CIPHER           | TLS CipherSpec to use                                |                    |
+| MQ_ERRORS               | Log MQ error log at end of test                      | FALSE              |
 
 
 The container will run a number of tests using different numbers of threads with messages of 2K, 20K and 200K. The scenario is a Request/Responder scenario as featured in the latest xLinux and Appliance performance reports available here:
