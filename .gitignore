@@ -18,3 +18,7 @@ output
 #Ignore keystores
 /ssl/*
 !/ssl/mqclient.ini
+
+/ssljks/*
+!/ssljks/README
+

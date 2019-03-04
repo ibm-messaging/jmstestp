@@ -11,6 +11,7 @@ userid="${MQ_USERID}"
 password="${MQ_PASSWORD}"
 nonpersistent="${MQ_NON_PERSISTENT:-0}"
 bindings=mqc
+cipher="${MQ_TLS_CIPHER}"
 
 # Setup MQ environment
 . /opt/mqm/bin/setmqenv -n Installation1
@@ -31,6 +32,10 @@ export JVM_OPTS="$JVM_OPTS -Dcom.ibm.mq.jmqi.defaultMaxMsgSize=8192"
 #export JVM_OPTS="$JVM_OPTS -Dcom.ibm.msg.client.commonservices.trace.status=on"
 #export JVM_OPTS="$JVM_OPTS -Xhealthcenter:level=headless -Dcom.ibm.java.diagnostics.healthcenter.headless.delay.start=1"
 
+if [ -n "${MQ_TLS_CIPHER}" ]; then
+  export JVM_OPTS="$JVM_OPTS -Djavax.net.ssl.trustStore=/tmp/keystore.jks -Djavax.net.ssl.keyStore=/tmp/keystore.jks -Djavax.net.ssl.keyStorePassword=f0ntwell2 -Djavax.net.ssl.trustStorePassword=f0ntwell2"
+fi
+
 
 if [ "${nonpersistent}" -eq 1 ]; then
   persistent_flags="-tx false -pp false" 
@@ -39,8 +44,8 @@ else
 fi
 
 if [ -n "${MQ_USERID}" ]; then 
-  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms768M -Xmx768M -Xmn600M JMSPerfHarness -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 0 -sc BasicStats -rl 0 -tc jms.r11.Responder -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -cr true -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 -jfq true $persistent_flags $extra -us $userid -pw $password -jm true
+  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms768M -Xmx768M -Xmn600M JMSPerfHarness -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 0 -sc BasicStats -rl 0 -tc jms.r11.Responder -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -cr true -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 -jfq true $persistent_flags -us $userid -pw $password -jm true -jl $cipher $extra
 else
-  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms768M -Xmx768M -Xmn600M JMSPerfHarness -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 0 -sc BasicStats -rl 0 -tc jms.r11.Responder -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -cr true -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 -jfq true $persistent_flags $extra 
+  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms768M -Xmx768M -Xmn600M JMSPerfHarness -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 0 -sc BasicStats -rl 0 -tc jms.r11.Responder -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -cr true -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 -jfq true $persistent_flags -jl $cipher $extra
 fi
 

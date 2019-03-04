@@ -37,14 +37,23 @@ msgsize=$2
 }
 
 function setupTLS {
+  #JMS Clients require keystore in JKS format
+  #MQ Clients including runmqsc/dmpmqcfg require keystore in KDB format
+  #
+  #Therefore we need to both to run automated tests as we use runmqsc for clearing the queues
+  #
   #Assuming that key.kdb is already present in the default location /opt/mqm/ssl/key.kdb
   #Assuming currently that kdb is CMS - Not tested yet with PKCS12
+
+  #We will look for JKS keystore at /tmp/keystore.jks
+  #There is no password stash file, password is provided to java system property on invocation
 
   #Override mqclient.ini with SSL Key repository location and reuse count
   cp /opt/mqm/ssl/mqclient.ini /var/mqm/mqclient.ini
 
   #Create local CCDT; alternatives are to copy it from Server or host it at http location
-  echo "DEFINE CHANNEL('$channel') CHLTYPE(CLNTCONN) CONNAME('$host($port)') SSLCIPH(${MQ_TLS_CIPHER}) QMNAME($qmname) REPLACE" | /opt/mqm/bin/runmqsc -n
+  mqicipher="${MQ_MQI_CIPHER:-TLS_RSA_WITH_AES_256_GCM_SHA384}"
+  echo "DEFINE CHANNEL('$channel') CHLTYPE(CLNTCONN) CONNAME('$host($port)') SSLCIPH($mqicipher) QMNAME($qmname) REPLACE" | /opt/mqm/bin/runmqsc -n >> /home/mqperf/jms/output 2>&1
 }
 
 echo "----------------------------------------"

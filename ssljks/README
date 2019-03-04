@@ -1,0 +1,3 @@
+# Place your JKS key repository in this folder and name it keystore.jks
+# It will get copied to /tmp on install and used by the Java clients
+
