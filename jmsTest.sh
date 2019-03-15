@@ -52,7 +52,7 @@ function setupTLS {
   cp /opt/mqm/ssl/mqclient.ini /var/mqm/mqclient.ini
 
   #Create local CCDT; alternatives are to copy it from Server or host it at http location
-  mqicipher="${MQ_MQI_CIPHER:-TLS_RSA_WITH_AES_256_GCM_SHA384}"
+  mqicipher="${MQ_TLS_CIPHER:-TLS_RSA_WITH_AES_256_GCM_SHA384}"
   echo "DEFINE CHANNEL('$channel') CHLTYPE(CLNTCONN) CONNAME('$host($port)') SSLCIPH($mqicipher) QMNAME($qmname) REPLACE" | /opt/mqm/bin/runmqsc -n >> /home/mqperf/jms/output 2>&1
 }
 
@@ -64,6 +64,7 @@ host="${MQ_QMGR_HOSTNAME:-localhost}"
 port="${MQ_QMGR_PORT:-1420}"
 channel="${MQ_QMGR_CHANNEL:-SYSTEM.DEF.SVRCONN}"
 nonpersistent="${MQ_NON_PERSISTENT:-0}"
+mqicipher=""
 
 # Conversion of MQ_NON_PERSISTENT to persistence for logging purposes
 if [ "${nonpersistent}" = "1" ]; then
@@ -92,15 +93,17 @@ if [ -n "${MQ_JMS_EXTRA}" ]; then
   echo "Extra JMS flags: ${MQ_JMS_EXTRA}" >> /home/mqperf/jms/results
 fi
 
-if [ -n "${MQ_TLS_CIPHER}" ]; then
-  echo "TLS Cipher: ${MQ_TLS_CIPHER}"
-  echo "TLS Cipher: ${MQ_TLS_CIPHER}" >> /home/mqperf/jms/results
+if [ -n "${MQ_JMS_CIPHER}" ]; then
+  echo "JMS TLS Cipher: ${MQ_JMS_CIPHER}"
+  echo "JMS TLS Cipher: ${MQ_JMS_CIPHER}" >> /home/mqperf/jms/results
   # Need to complete TLS setup before we try to attach monitors
   setupTLS
+  echo "MQI TLS Cipher: ${mqicipher}"
+  echo "MQI TLS Cipher: ${mqicipher}" >> /home/mqperf/jms/results
 fi
 
 #Clear queues
-if [ -n "${MQ_TLS_CIPHER}" ]; then
+if [ -n "${MQ_JMS_CIPHER}" ]; then
   #Dont configure MQSERVER envvar for TLS scenarios, will use CCDT
   #We do need to specify the Key repository location as runmqsc doesnt use mqclient.ini
   export MQSSLKEYR=/opt/mqm/ssl/key
@@ -125,11 +128,11 @@ fi
 mpstat 10 > /tmp/mpstat &
 dstat --output /tmp/dstat 10 > /dev/null 2>&1 &
 if [ -n "${MQ_USERID}" ]; then
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} >/tmp/system 2>/tmp/systemerr &
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} >/tmp/disklog 2>/tmp/disklogerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/system 2>/tmp/systemerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/disklog 2>/tmp/disklogerr &
 else
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -l ${MQ_TLS_CIPHER} >/tmp/system 2>/tmp/systemerr &
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -l ${MQ_TLS_CIPHER} >/tmp/disklog 2>/tmp/disklogerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -l ${mqicipher} >/tmp/system 2>/tmp/systemerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -l ${mqicipher} >/tmp/disklog 2>/tmp/disklogerr &
 fi
 
 #Write CSV header if required

@@ -12,7 +12,7 @@ userid="${MQ_USERID}"
 password="${MQ_PASSWORD}"
 nonpersistent="${MQ_NON_PERSISTENT:-0}"
 bindings=mqc
-cipher="${MQ_TLS_CIPHER}"
+cipher="${MQ_JMS_CIPHER}"
 
 # Setup MQ environment
 . /opt/mqm/bin/setmqenv -n Installation1
@@ -33,7 +33,7 @@ export JVM_OPTS="$JVM_OPTS -Dcom.ibm.mq.jmqi.defaultMaxMsgSize=8192"
 #export JVM_OPTS="$JVM_OPTS -Dcom.ibm.msg.client.commonservices.trace.status=on"
 #export JVM_OPTS="$JVM_OPTS -Xhealthcenter:level=headless -Dcom.ibm.java.diagnostics.healthcenter.headless.delay.start=1"
 
-if [ -n "${MQ_TLS_CIPHER}" ]; then
+if [ -n "${MQ_JMS_CIPHER}" ]; then
   export JVM_OPTS="$JVM_OPTS -Djavax.net.ssl.trustStore=/tmp/keystore.jks -Djavax.net.ssl.keyStore=/tmp/keystore.jks -Djavax.net.ssl.keyStorePassword=f0ntwell2 -Djavax.net.ssl.trustStorePassword=f0ntwell2"
 fi
 
