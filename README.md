@@ -14,6 +14,10 @@ The MQ V9 client can be obtained from: http://www-01.ibm.com/support/docview.wss
 
 The MQ V9.1 client can be obtained from: http://www-01.ibm.com/support/docview.wss?uid=swg24044791
 
+To enable TLS communication between the container and your QM you will need to:
+* provide a CMS keystore named key.kdb (and its stash file) containing your QM public certificate in the /ssl directory.
+* provide a JKS keystore named keystore.jks containing your QM public certificate in the /ssljks directory.
+
 then perform a docker build as normal:
 
 `docker build --tag jmstestp .`
@@ -45,7 +49,8 @@ In the latest release further configuration options have been added. The table b
 | MQ_JMS_EXTRA            | Additional string field to propogate to jms client   |                    |
 | MQ_RESULTS              | Log results to stdout at end of tests                | TRUE               |
 | MQ_RESULTS_CSV          | Log results to csv file and send to stdout at end    | FALSE              |
-| MQ_TLS_CIPHER           | TLS CipherSpec to use                                |                    |
+| MQ_TLS_CIPHER           | TLS CipherSpec to use for remote configuration       |                    |
+| MQ_JMS_CIPHER           | TLS CipherSuite for JMS clients to use               |                    |
 | MQ_ERRORS               | Log MQ error log at end of test                      | FALSE              |
 
 
@@ -68,11 +73,20 @@ An interactive session with the running container can be access by:
 
 `docker -ti <containerID> /bin/bash`
 
-The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base docker image is IBMs Java 1.8 which uses Ubuntu 16.04. The most up to date JMSPerfHarness code can be found here:
-https://github.com/ot4i/perf-harness
+
+One complication is that within the container running the automated JMS test, the scripts use remote runmqsc command to clear the queues that the tests will use. This is straightforward when TLS is not involved as we can configure our remote QM connection details and set them in a MQSERVER envvar before invoking runmqsc –c.
+ 
+To run JMS tests with TLS configured, we will need the CCDT configured locally and also a CMS keystore for runmqsc to communicate with the QM securely; thus you will still need to supply a CMS keystore in the /ssl directory alongside the JKS keystore in the /ssljks directory for the tests to run correctly. You can specify the CipherSuite to use with the JMS clients by setting the MQ_JMS_CIPHER envvar. The CipherSpec configured in the CCDT for use by runmqsc will use the MQ_TLS_CIPHER. 
+
+The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base docker image is IBMs Java 1.8 which uses Ubuntu 16.04. 
+
+The current level of Java is Java 8 SR5 FP27. This level of Java contains the full strength cryptography suites without additional modification. If you use an older version of Java you may need to configure it to use the strongest ciphers if supported within your geography. See: https://www.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.nd.multiplatform.doc/ae/tsec_egs.html for more details.
 
 Information on IBM's Java for Docker can be found here:
 https://hub.docker.com/_/ibmjava/
+
+The most up to date JMSPerfHarness code can be found here:
+https://github.com/ot4i/perf-harness
 
 If you have an older version of this repository or PerfHarness, you may find you need the latest update to be able to work with the MQoC service, as this offering requires the MQ client to use CSP authentication when interacting with the QM. See the newly added -jm option.
 
