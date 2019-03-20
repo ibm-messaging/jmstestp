@@ -51,6 +51,7 @@ In the latest release further configuration options have been added. The table b
 | MQ_RESULTS_CSV          | Log results to csv file and send to stdout at end    | FALSE              |
 | MQ_TLS_CIPHER           | TLS CipherSpec to use for remote configuration       |                    |
 | MQ_JMS_CIPHER           | TLS CipherSuite for JMS clients to use               |                    |
+| MQ_JMS_KEYSTOREPASSWORD | Keystore password to use with JKS keystore           |                    |
 | MQ_ERRORS               | Log MQ error log at end of test                      | FALSE              |
 
 
@@ -76,7 +77,7 @@ An interactive session with the running container can be access by:
 
 One complication is that within the container running the automated JMS test, the scripts use remote runmqsc command to clear the queues that the tests will use. This is straightforward when TLS is not involved as we can configure our remote QM connection details and set them in a MQSERVER envvar before invoking runmqsc –c.
  
-To run JMS tests with TLS configured, we will need the CCDT configured locally and also a CMS keystore for runmqsc to communicate with the QM securely; thus you will still need to supply a CMS keystore in the /ssl directory alongside the JKS keystore in the /ssljks directory for the tests to run correctly. You can specify the CipherSuite to use with the JMS clients by setting the MQ_JMS_CIPHER envvar. The CipherSpec configured in the CCDT for use by runmqsc will use the MQ_TLS_CIPHER. 
+To run JMS tests with TLS configured, we will need the CCDT configured locally and also a CMS keystore for runmqsc to communicate with the QM securely; thus you will still need to supply a CMS keystore in the /ssl directory alongside the JKS keystore in the /ssljks directory for the tests to run correctly. You can specify the CipherSuite to use with the JMS clients by setting the MQ_JMS_CIPHER envvar. The JKS keystore password can be supplied by setting MQ_JMS_KEYSTOREPASSWORD. The CipherSpec configured in the CCDT for use by runmqsc will use the MQ_TLS_CIPHER. 
 
 The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base docker image is IBMs Java 1.8 which uses Ubuntu 16.04. 
 
