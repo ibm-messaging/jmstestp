@@ -153,34 +153,40 @@ echo "JMS Test Results" >> /home/mqperf/jms/results
 echo $(date) >> /home/mqperf/jms/results
 echo "2K" >> /home/mqperf/jms/results
 runclients 1
+runclients 2
+runclients 4
 runclients 8
 runclients 16
 runclients 32
 runclients 64
 runclients 128
-runclients 200
+runclients 240
 
 echo "----" >> /home/mqperf/jms/results
 echo $(date) >> /home/mqperf/jms/results
 echo "20K" >> /home/mqperf/jms/results
 runclients 1 20480
+runclients 2 20480
+runclients 4 20480
 runclients 8 20480
 runclients 16 20480
 runclients 32 20480
 runclients 64 20480
 runclients 128 20480
-runclients 200 20480
+runclients 240 20480
 
 echo "----" >> /home/mqperf/jms/results
 echo $(date) >> /home/mqperf/jms/results
 echo "200K" >> /home/mqperf/jms/results
 runclients 1 204800
+runclients 2 204800
+runclients 4 204800
 runclients 8 204800
 runclients 16 204800
 runclients 32 204800
 runclients 64 204800
 runclients 128 204800
-runclients 200 204800
+runclients 240 204800
 echo "" >> /home/mqperf/jms/results
 
 if ! [ "${MQ_RESULTS}" = "FALSE" ]; then
