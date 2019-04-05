@@ -138,7 +138,8 @@ fi
 #Write CSV header if required
 if [ -n "${MQ_RESULTS_CSV}" ]; then
   msgsize=${msgsize:-2048}
-  printf "# " > /home/mqperf/jms/results.csv
+  echo "# CSV Results" > /home/mqperf/jms/results.csv
+  printf "# " >> /home/mqperf/jms/results.csv
   echo $(date) >> /home/mqperf/jms/results.csv
   echo "# Persistence, Msg Size, Threads, Rate (RT/s), Client CPU, IO Read (MB/s), IO Write (MB/s), Net Recv (Gb/s), Net Send (Gb/s), QM CPU" >> /home/mqperf/jms/results.csv
 fi
