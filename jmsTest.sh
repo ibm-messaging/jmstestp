@@ -13,16 +13,16 @@ msgsize=$2
   cpu=$(awk '{print $12}' /tmp/mpstat | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?100-(total/NR):-1)}')
   echo "CPU=$cpu" >> /home/mqperf/jms/results
 
-  readMB=$(awk -F ',' '{print $7}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}')
+  readMB=$(awk -F ',' '{print $6}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}')
   echo "Read=$readMB" >> /home/mqperf/jms/results
 
-  writeMB=$(awk -F ',' '{print $8}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}')
+  writeMB=$(awk -F ',' '{print $7}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024)):-1)}')
   echo "Write=$writeMB">> /home/mqperf/jms/results
 
-  recvGbs=$(awk -F ',' '{print $9}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}')
+  recvGbs=$(awk -F ',' '{print $8}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}')
   echo "Recv=$recvGbs" >> /home/mqperf/jms/results
 
-  sendGbs=$(awk -F ',' '{print $10}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}')
+  sendGbs=$(awk -F ',' '{print $9}' /tmp/dstat | tail -n +8 | tail -6 |  awk '{total+=$1} END{printf "%0.2f\n",(NR?((total/NR)/(1024*1024*1024*0.125)):-1)}')
   echo "Send=$sendGbs" >> /home/mqperf/jms/results
 
   qmcpu=$(tail -6 /tmp/systemerr | awk -F '=' '{print $2}' | awk '{total+=$1} END{printf "%0.2f\n",(NR?(total/NR):-1)}')
@@ -34,6 +34,16 @@ msgsize=$2
     msgsize=${msgsize:-2048}
     echo "$persistent,$msgsize,$threads,$rate,$cpu,$readMB,$writeMB,$recvGbs,$sendGbs,$qmcpu" >> /home/mqperf/jms/results.csv
   fi
+}
+
+function getConcurrentClientsArray {
+  maximumClients=$1
+  maximumClients=`expr ${maximumClients} - 2`
+  for (( i=1; i<=$maximumClients; i=$i*2 ))
+  do
+    clientsArray+=($i)
+  done
+  clientsArray+=($maximumClients)
 }
 
 function setupTLS {
@@ -150,44 +160,33 @@ echo "----------------------------------------"
 ./jmsresp.sh ${MQ_RESPONDER_THREADS} >> /home/mqperf/jms/output &
 #Wait for responders to start
 sleep 60
+#Determine sequence of requester clients to use
+getConcurrentClientsArray ${MQ_RESPONDER_THREADS}
+echo "Using the following progression of concurrent connections: ${clientsArray[@]}"
+echo "Using the following progression of concurrent connections: ${clientsArray[@]}" >> /home/mqperf/jms/results
+
 echo "JMS Test Results" >> /home/mqperf/jms/results
 echo $(date) >> /home/mqperf/jms/results
 echo "2K" >> /home/mqperf/jms/results
-runclients 1
-runclients 2
-runclients 4
-runclients 8
-runclients 16
-runclients 32
-runclients 64
-runclients 128
-runclients 240
+for concurrentConnections in ${clientsArray[@]}
+do
+  runclients $concurrentConnections 2048
+done
 
-echo "----" >> /home/mqperf/jms/results
 echo $(date) >> /home/mqperf/jms/results
 echo "20K" >> /home/mqperf/jms/results
-runclients 1 20480
-runclients 2 20480
-runclients 4 20480
-runclients 8 20480
-runclients 16 20480
-runclients 32 20480
-runclients 64 20480
-runclients 128 20480
-runclients 240 20480
+for concurrentConnections in ${clientsArray[@]}
+do
+  runclients $concurrentConnections 20480
+done
 
-echo "----" >> /home/mqperf/jms/results
 echo $(date) >> /home/mqperf/jms/results
 echo "200K" >> /home/mqperf/jms/results
-runclients 1 204800
-runclients 2 204800
-runclients 4 204800
-runclients 8 204800
-runclients 16 204800
-runclients 32 204800
-runclients 64 204800
-runclients 128 204800
-runclients 240 204800
+for concurrentConnections in ${clientsArray[@]}
+do
+  runclients $concurrentConnections 204800
+done
+
 echo "" >> /home/mqperf/jms/results
 
 if ! [ "${MQ_RESULTS}" = "FALSE" ]; then
