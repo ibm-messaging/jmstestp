@@ -75,6 +75,7 @@ port="${MQ_QMGR_PORT:-1420}"
 channel="${MQ_QMGR_CHANNEL:-SYSTEM.DEF.SVRCONN}"
 nonpersistent="${MQ_NON_PERSISTENT:-0}"
 mqicipher=""
+responders="${MQ_RESPONDER_THREADS:-200}"
 
 # Conversion of MQ_NON_PERSISTENT to persistence for logging purposes
 if [ "${nonpersistent}" = "1" ]; then
@@ -157,11 +158,11 @@ fi
 echo "----------------------------------------"
 echo "Starting JMS tests----------------------"
 echo "----------------------------------------"
-./jmsresp.sh ${MQ_RESPONDER_THREADS} >> /home/mqperf/jms/output &
+./jmsresp.sh ${responders} >> /home/mqperf/jms/output &
 #Wait for responders to start
 sleep 60
-#Determine sequence of requester clients to use
-getConcurrentClientsArray ${MQ_RESPONDER_THREADS}
+#Determine sequence of requester clients to use from the number of responders
+getConcurrentClientsArray ${responders}
 echo "Using the following progression of concurrent connections: ${clientsArray[@]}"
 echo "Using the following progression of concurrent connections: ${clientsArray[@]}" >> /home/mqperf/jms/results
 
