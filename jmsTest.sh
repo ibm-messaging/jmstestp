@@ -39,7 +39,7 @@ msgsize=$2
 function getConcurrentClientsArray {
   maximumClients=$1
   maximumClients=`expr ${maximumClients} - 2`
-  for (( i=1; i<=$maximumClients; i=$i*2 ))
+  for (( i=1; i<$maximumClients; i=$i*2 ))
   do
     clientsArray+=($i)
   done
