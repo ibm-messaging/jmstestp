@@ -84,33 +84,26 @@ else
   persistent=1
 fi
 
-echo $(date)
-echo $(date) > /home/mqperf/jms/results
+echo $(date) | tee /home/mqperf/jms/results
 
 if [ "${nonpersistent}" -eq 1 ]; then
-  echo "Running Non Persistent JMS Messaging Tests"
-  echo "Running Non Persistent JMS Messaging Tests" >> /home/mqperf/jms/results
+  echo "Running Non Persistent JMS Messaging Tests" | tee -a /home/mqperf/jms/results
 else
-  echo "Running Persistent JMS Messaging Tests"
-  echo "Running Persistent JMS Messaging Tests" >> /home/mqperf/jms/results
+  echo "Running Persistent JMS Messaging Tests" | tee -a /home/mqperf/jms/results
 fi
 echo "----------------------------------------"
 
-echo "Testing QM: $qmname on host: $host using port: $port and channel: $channel" 
-echo "Testing QM: $qmname on host: $host using port: $port and channel: $channel" >> /home/mqperf/jms/results
+echo "Testing QM: $qmname on host: $host using port: $port and channel: $channel" | tee -a /home/mqperf/jms/results 
 
 if [ -n "${MQ_JMS_EXTRA}" ]; then
-  echo "Extra JMS flags: ${MQ_JMS_EXTRA}" 
-  echo "Extra JMS flags: ${MQ_JMS_EXTRA}" >> /home/mqperf/jms/results
+  echo "Extra JMS flags: ${MQ_JMS_EXTRA}" | tee -a /home/mqperf/jms/results
 fi
 
 if [ -n "${MQ_JMS_CIPHER}" ]; then
-  echo "JMS TLS Cipher: ${MQ_JMS_CIPHER}"
-  echo "JMS TLS Cipher: ${MQ_JMS_CIPHER}" >> /home/mqperf/jms/results
+  echo "JMS TLS Cipher: ${MQ_JMS_CIPHER}" | tee -a /home/mqperf/jms/results
   # Need to complete TLS setup before we try to attach monitors
   setupTLS
-  echo "MQI TLS Cipher: ${mqicipher}"
-  echo "MQI TLS Cipher: ${mqicipher}" >> /home/mqperf/jms/results
+  echo "MQI TLS Cipher: ${mqicipher}" | tee -a /home/mqperf/jms/results
 fi
 
 #Clear queues
@@ -125,8 +118,7 @@ fi
 
 if [ -n "${MQ_USERID}" ]; then
   # Need to flow userid and password to runmqsc
-  echo "Using userid: ${MQ_USERID}" 
-  echo "Using userid: ${MQ_USERID}" >> /home/mqperf/jms/results
+  echo "Using userid: ${MQ_USERID}" | tee -a /home/mqperf/jms/results
   echo ${MQ_PASSWORD} > /tmp/clearq.mqsc;
   cat /home/mqperf/jms/clearq.mqsc >> /tmp/clearq.mqsc;  
   cat /tmp/clearq.mqsc | /opt/mqm/bin/runmqsc -c -u ${MQ_USERID} -w 60 $qmname > /home/mqperf/jms/output 2>&1;
@@ -163,8 +155,8 @@ echo "----------------------------------------"
 sleep 60
 #Determine sequence of requester clients to use from the number of responders
 getConcurrentClientsArray ${responders}
-echo "Using the following progression of concurrent connections: ${clientsArray[@]}"
-echo "Using the following progression of concurrent connections: ${clientsArray[@]}" >> /home/mqperf/jms/results
+echo "Using the following progression of concurrent connections: ${clientsArray[@]}" | tee -a /home/mqperf/cph/results
+echo "Using ${responders} responder threads" | tee -a /home/mqperf/cph/results
 
 echo "JMS Test Results" >> /home/mqperf/jms/results
 echo $(date) >> /home/mqperf/jms/results
@@ -194,10 +186,6 @@ if ! [ "${MQ_RESULTS}" = "FALSE" ]; then
   cat /home/mqperf/jms/results
 fi
 
-if [ -n "${MQ_RESULTS_CSV}" ]; then
-  cat /home/mqperf/jms/results.csv
-fi
-
 if [ -n "${MQ_DATA}" ]; then
   cat /tmp/system
   cat /tmp/disklog
@@ -208,6 +196,9 @@ if [ -n "${MQ_ERRORS}" ]; then
   cat /var/mqm/errors/AMQERR01.LOG
 fi
 
+if [ -n "${MQ_RESULTS_CSV}" ]; then
+  cat /home/mqperf/jms/results.csv
+fi
 echo "----------------------------------------"
 echo "jms testing finished--------------------"
 echo "----------------------------------------"
