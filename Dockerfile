@@ -67,10 +67,10 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 
 RUN export DEBIAN_FRONTEND=noninteractive \
   && ./mqlicense.sh -accept \
-  && dpkg -i ibmmq-runtime_9.1.0.0_amd64.deb \
-  && dpkg -i ibmmq-client_9.1.0.0_amd64.deb \
-  && dpkg -i ibmmq-java_9.1.0.0_amd64.deb \
-  && dpkg -i ibmmq-gskit_9.1.0.0_amd64.deb
+  && dpkg -i ibmmq-runtime_9.2.3.0_amd64.deb \
+  && dpkg -i ibmmq-java_9.2.3.0_amd64.deb \
+  && dpkg -i ibmmq-gskit_9.2.3.0_amd64.deb \
+  && dpkg -i ibmmq-client_9.2.3.0_amd64.deb 
 
 
 WORKDIR /home/mqperf/jms
@@ -80,6 +80,7 @@ COPY *.jar /home/mqperf/jms/
 COPY *.sh /home/mqperf/jms/
 COPY *.mqsc /home/mqperf/jms/
 COPY qmmonitor2 /home/mqperf/jms/
+
 RUN export DEBIAN_FRONTEND=noninteractive \
   && chown -R mqperf:mqm /opt/mqm/ssl \
   && chown -R mqperf:mqm /tmp
