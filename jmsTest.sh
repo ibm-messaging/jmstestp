@@ -73,6 +73,7 @@ qmname="${MQ_QMGR_NAME:-PERF0}"
 host="${MQ_QMGR_HOSTNAME:-localhost}"
 port="${MQ_QMGR_PORT:-1420}"
 channel="${MQ_QMGR_CHANNEL:-SYSTEM.DEF.SVRCONN}"
+msgsizestring="${MQ_MSGSIZE:-2048:20480:204800}"
 nonpersistent="${MQ_NON_PERSISTENT:-0}"
 mqicipher=""
 responders="${MQ_RESPONDER_THREADS:-200}"
@@ -94,6 +95,11 @@ fi
 echo "----------------------------------------"
 
 echo "Testing QM: $qmname on host: $host using port: $port and channel: $channel" | tee -a /home/mqperf/jms/results 
+
+echo "Using the following message sizes:" | tee -a /home/mqperf/jms/results
+for messageSize in ${msgsizestring}; do
+  echo "$messageSize" | tee -a /home/mqperf/cph/results 
+done
 
 if [ -n "${MQ_JMS_EXTRA}" ]; then
   echo "Extra JMS flags: ${MQ_JMS_EXTRA}" | tee -a /home/mqperf/jms/results
@@ -150,7 +156,7 @@ fi
 echo "----------------------------------------"
 echo "Starting JMS tests----------------------"
 echo "----------------------------------------"
-./jmsresp.sh ${responders} >> /home/mqperf/jms/output &
+./jmsresp.sh ${responders} >> /home/mqperf/jms/output & disown
 #Wait for responders to start
 sleep 60
 #Determine sequence of requester clients to use from the number of responders
@@ -159,25 +165,13 @@ echo "Using the following progression of concurrent connections: ${clientsArray[
 echo "Using ${responders} responder threads" | tee -a /home/mqperf/cph/results
 
 echo "JMS Test Results" >> /home/mqperf/jms/results
-echo $(date) >> /home/mqperf/jms/results
-echo "2K" >> /home/mqperf/jms/results
-for concurrentConnections in ${clientsArray[@]}
-do
-  runclients $concurrentConnections 2048
-done
-
-echo $(date) >> /home/mqperf/jms/results
-echo "20K" >> /home/mqperf/jms/results
-for concurrentConnections in ${clientsArray[@]}
-do
-  runclients $concurrentConnections 20480
-done
-
-echo $(date) >> /home/mqperf/jms/results
-echo "200K" >> /home/mqperf/jms/results
-for concurrentConnections in ${clientsArray[@]}
-do
-  runclients $concurrentConnections 204800
+for messageSize in ${msgsizestring}; do
+  echo $(date) >> /home/mqperf/cph/results
+  echo "$messageSize" >> /home/mqperf/cph/results
+  for concurrentConnections in ${clientsArray[@]}
+  do
+    runclients $concurrentConnections $messageSize
+  done
 done
 
 echo "" >> /home/mqperf/jms/results
@@ -186,7 +180,7 @@ if ! [ "${MQ_RESULTS}" = "FALSE" ]; then
   cat /home/mqperf/jms/results
 fi
 
-if [ -n "${MQ_DATA}" ]; then
+if [ -n "${MQ_DATA}" ] && [ ${MQ_DATA} -eq 1 ]; then
   cat /tmp/system
   cat /tmp/disklog
   cat /home/mqperf/jms/output
