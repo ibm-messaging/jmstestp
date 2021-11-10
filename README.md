@@ -61,6 +61,7 @@ In the latest release further configuration options have been added. The table b
 | MQ_QMGR_PORT            | Port where QM listener is running                    | 1420               |
 | MQ_QMGR_CHANNEL         | Channel name to use to connect to QM                 | SYSTEM.DEF.SVRCONN |
 | MQ_RESPONDER_THREADS    | Number of responder threads to run                   | 200                |
+| MQ_MSGSIZE              | Message sizes to test                                | 2048:20480:204800  |
 | MQ_QMGR_QREQUEST_PREFIX | Prefix of request queues to use.                     | REQUEST            |
 | MQ_QMGR_QREPLY_PREFIX   | Prefix of reply queues to use.                       | REPLY              |
 | MQ_NON_PERSISTENT       | QOS to be used by connecting clients                 | 0 (Persistent)     |
