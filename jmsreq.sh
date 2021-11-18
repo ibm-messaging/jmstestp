@@ -14,6 +14,7 @@ nonpersistent="${MQ_NON_PERSISTENT:-0}"
 bindings=mqc
 cipher="${MQ_JMS_CIPHER}"
 keystorepassword="${MQ_JMS_KEYSTOREPASSWORD}"
+runlength="${MQ_RUNLENGTH:-90}"
 
 # Setup MQ environment
 . /opt/mqm/bin/setmqenv -n Installation1
@@ -46,8 +47,8 @@ else
 fi
 
 if [ -n "${MQ_USERID}" ]; then 
-  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms1768M -Xmx1768M -Xmn1600M JMSPerfHarness -ms $msgsize -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 10 -sc BasicStats -rl 180 -sw 120 -tc jms.r11.Requestor -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 $persistent_flags -us $userid -pw $password -jm true -jl $cipher $extra
+  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms1768M -Xmx1768M -Xmn1600M JMSPerfHarness -ms $msgsize -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 10 -sc BasicStats -rl $runlength -sw 120 -tc jms.r11.Requestor -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 $persistent_flags -us $userid -pw $password -jm true -jl $cipher $extra
 else
-  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms1768M -Xmx1768M -Xmn1600M JMSPerfHarness -ms $msgsize -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 10 -sc BasicStats -rl 180 -sw 120 -tc jms.r11.Requestor -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 $persistent_flags -jl $cipher $extra 
+  java $JVM_OPTS -cp $MQ_JARS:$PERFHARNESS_JAR -Xms1768M -Xmx1768M -Xmn1600M JMSPerfHarness -ms $msgsize -su -wt 10000 -wi 10 -nt $threads -id 1 -ss 10 -sc BasicStats -rl $runlength -sw 120 -tc jms.r11.Requestor -iq $requestq -oq $replyq -db 1 -dx 10 -to 60 -mt text -jp $port -jc $channel -jb $qmname -jt $bindings -pc WebSphereMQ -jh $host -jq SYSTEM.BROKER.DEFAULT.STREAM -ja 100 $persistent_flags -jl $cipher $extra 
 fi
 
