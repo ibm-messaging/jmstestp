@@ -37,6 +37,9 @@ msgsize=$2
 }
 
 function getConcurrentClientsArray {
+if  ! [ -z "{MQ_FIXED_CLIENTS}" ]; then
+  clientsArray=(${MQ_FIXED_CLIENTS})
+else  
   maximumClients=$1
   #maximumClients=`expr ${maximumClients} - 2`
   for (( i=1; i<$maximumClients; i=$i*2 ))
@@ -44,6 +47,7 @@ function getConcurrentClientsArray {
     clientsArray+=($i)
   done
   clientsArray+=($maximumClients)
+fi
 }
 
 function setupTLS {
@@ -122,16 +126,18 @@ else
   export MQSERVER="$channel/TCP/$host($port)";
 fi
 
-if [ -n "${MQ_USERID}" ]; then
-  # Need to flow userid and password to runmqsc
-  echo "Using userid: ${MQ_USERID}" | tee -a /home/mqperf/jms/results
-  echo ${MQ_PASSWORD} > /tmp/clearq.mqsc;
-  cat /home/mqperf/jms/clearq.mqsc >> /tmp/clearq.mqsc;  
-  cat /tmp/clearq.mqsc | /opt/mqm/bin/runmqsc -c -u ${MQ_USERID} -w 60 $qmname > /home/mqperf/jms/output 2>&1;
-  rm -f /tmp/clearq.mqsc;
-else
-  cat /home/mqperf/jms/clearq.mqsc | /opt/mqm/bin/runmqsc -c $qmname > /home/mqperf/jms/output 2>&1;
-fi
+if ! ( [ -n "{MQ_CLEAR_QUEUES}" ] && [ "${MQ_CLEAR_QUEUES}" = "N" ] ); then
+  if [ -n "${MQ_USERID}" ]; then
+    # Need to flow userid and password to runmqsc
+    echo "Using userid: ${MQ_USERID}" | tee -a /home/mqperf/jms/results
+    echo ${MQ_PASSWORD} > /tmp/clearq.mqsc;
+    cat /home/mqperf/jms/clearq.mqsc >> /tmp/clearq.mqsc;  
+    cat /tmp/clearq.mqsc | /opt/mqm/bin/runmqsc -c -u ${MQ_USERID} -w 60 $qmname > /home/mqperf/jms/output 2>&1;
+    rm -f /tmp/clearq.mqsc;
+  else
+    cat /home/mqperf/jms/clearq.mqsc | /opt/mqm/bin/runmqsc -c $qmname > /home/mqperf/jms/output 2>&1;
+  fi
+fi  
 
 #Launch monitoring processes
 mpstat 10 > /tmp/mpstat &
@@ -164,15 +170,19 @@ getConcurrentClientsArray ${responders}
 echo "Using the following progression of concurrent connections: ${clientsArray[@]}" | tee -a /home/mqperf/cph/results
 echo "Using ${responders} responder threads" | tee -a /home/mqperf/cph/results
 
+IFS=:
 echo "JMS Test Results" >> /home/mqperf/jms/results
 for messageSize in ${msgsizestring}; do
+  unset IFS
   echo $(date) >> /home/mqperf/cph/results
+  IFS=:
   echo "$messageSize" >> /home/mqperf/cph/results
   for concurrentConnections in ${clientsArray[@]}
   do
     runclients $concurrentConnections $messageSize
   done
 done
+unset IFS
 
 echo "" >> /home/mqperf/jms/results
 
