@@ -74,6 +74,7 @@ In the latest release further configuration options have been added. The table b
 | MQ_JMS_CIPHER           | TLS CipherSuite for JMS clients to use               |                    |
 | MQ_JMS_KEYSTOREPASSWORD | Keystore password to use with JKS keystore           |                    |
 | MQ_ERRORS               | Log MQ error log at end of test                      | FALSE              |
+| MQ_RUNLENGTH            | Length of each test iteration (seconds)              | 180                |
 
 
 ## Retrieving the test results
