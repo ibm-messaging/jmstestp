@@ -102,7 +102,7 @@ echo "Testing QM: $qmname on host: $host using port: $port and channel: $channel
 
 echo "Using the following message sizes:" | tee -a /home/mqperf/jms/results
 for messageSize in ${msgsizestring}; do
-  echo "$messageSize" | tee -a /home/mqperf/cph/results 
+  echo "$messageSize" | tee -a /home/mqperf/jms/results 
 done
 
 if [ -n "${MQ_JMS_EXTRA}" ]; then
@@ -167,16 +167,16 @@ echo "----------------------------------------"
 sleep 60
 #Determine sequence of requester clients to use from the number of responders
 getConcurrentClientsArray ${responders}
-echo "Using the following progression of concurrent connections: ${clientsArray[@]}" | tee -a /home/mqperf/cph/results
-echo "Using ${responders} responder threads" | tee -a /home/mqperf/cph/results
+echo "Using the following progression of concurrent connections: ${clientsArray[@]}" | tee -a /home/mqperf/jms/results
+echo "Using ${responders} responder threads" | tee -a /home/mqperf/jms/results
 
 IFS=:
 echo "JMS Test Results" >> /home/mqperf/jms/results
 for messageSize in ${msgsizestring}; do
   unset IFS
-  echo $(date) >> /home/mqperf/cph/results
+  echo $(date) >> /home/mqperf/jms/results
   IFS=:
-  echo "$messageSize" >> /home/mqperf/cph/results
+  echo "$messageSize" >> /home/mqperf/jms/results
   for concurrentConnections in ${clientsArray[@]}
   do
     runclients $concurrentConnections $messageSize
