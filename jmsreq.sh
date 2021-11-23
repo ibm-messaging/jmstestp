@@ -14,7 +14,7 @@ nonpersistent="${MQ_NON_PERSISTENT:-0}"
 bindings=mqc
 cipher="${MQ_JMS_CIPHER}"
 keystorepassword="${MQ_JMS_KEYSTOREPASSWORD}"
-runlength="${MQ_RUNLENGTH:-90}"
+runlength="${MQ_RUNLENGTH:-180}"
 
 # Setup MQ environment
 . /opt/mqm/bin/setmqenv -n Installation1
