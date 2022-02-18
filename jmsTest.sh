@@ -2,8 +2,8 @@
 
 #Functions
 function runclients {
-threads=$1
-msgsize=$2
+  threads=$1
+  msgsize=$2
   echo "threads=$threads" >> /home/mqperf/jms/results
   echo "Starting test with $threads JMS requesters" >> /home/mqperf/jms/output
   rate=$(./jmsreq.sh $threads $msgsize | tee -a /home/mqperf/jms/output | grep totalRate | awk -F ',' '{ print $3 }')
@@ -31,7 +31,6 @@ msgsize=$2
   echo "" >> /home/mqperf/jms/results
 
   if [ -n "${MQ_RESULTS_CSV}" ]; then
-    msgsize=${msgsize:-2048}
     echo "$persistent,$msgsize,$threads,$rate,$cpu,$readMB,$writeMB,$recvGbs,$sendGbs,$qmcpu" >> /home/mqperf/jms/results.csv
   fi
 }
@@ -64,6 +63,10 @@ function setupTLS {
 
   #Override mqclient.ini with SSL Key repository location and reuse count
   cp /opt/mqm/ssl/mqclient.ini /var/mqm/mqclient.ini
+
+  if [[ -n "${MQ_TLS_SNI_HOSTNAME}" ]]; then
+    echo "  OutboundSNI=HOSTNAME" >> /var/mqm/mqclient.ini
+  fi
 
   #Create local CCDT; alternatives are to copy it from Server or host it at http location
   mqicipher="${MQ_TLS_CIPHER:-TLS_RSA_WITH_AES_256_GCM_SHA384}"
@@ -145,15 +148,17 @@ dstat --output /tmp/dstat 10 > /dev/null 2>&1 &
 if [ -n "${MQ_USERID}" ]; then
   ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/system 2>/tmp/systemerr &
   ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/disklog 2>/tmp/disklogerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/nhalog 2>/tmp/nhalogerr &
 else
   ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -l ${mqicipher} >/tmp/system 2>/tmp/systemerr &
   ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -l ${mqicipher} >/tmp/disklog 2>/tmp/disklogerr &
+  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -l ${mqicipher} >/tmp/nhalog 2>/tmp/nhalogerr &
 fi
 
 #Write CSV header if required
 if [ -n "${MQ_RESULTS_CSV}" ]; then
-  msgsize=${msgsize:-2048}
   echo "# CSV Results" > /home/mqperf/jms/results.csv
+  echo "# TLS Cipher: ${MQ_JMS_CIPHER}" >> /home/mqperf/jms/results.csv
   printf "# " >> /home/mqperf/jms/results.csv
   echo $(date) >> /home/mqperf/jms/results.csv
   echo "# Persistence, Msg Size, Threads, Rate (RT/s), Client CPU, IO Read (MB/s), IO Write (MB/s), Net Recv (Gb/s), Net Send (Gb/s), QM CPU" >> /home/mqperf/jms/results.csv
@@ -193,6 +198,7 @@ fi
 if [ -n "${MQ_DATA}" ] && [ ${MQ_DATA} -eq 1 ]; then
   cat /tmp/system
   cat /tmp/disklog
+  cat /tmp/nhalog  
   cat /home/mqperf/jms/output
 fi
 
