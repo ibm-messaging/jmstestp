@@ -3,6 +3,8 @@ Environment for creating a docker image running JMS performance tests for Persis
 
 This repository contains a set of files to help create a Docker image containing the JMSPerfHarness jar, IBM's Java 1.8 and a set of scripts to run an inital set of performance tests.
 
+The C version of this testharness using MQI interfaces is available here: https://github.com/ibm-messaging/cphtestp
+
 
 ## Pre-requisites
 You will need to separately download the MQ Client (for which license agreement is required) and copy the following files into the root directory before building your docker image:
@@ -16,6 +18,10 @@ You will need to separately download the MQ Client (for which license agreement 
 The MQ V9 client can be obtained from: http://www-01.ibm.com/support/docview.wss?uid=swg24042176
 
 The MQ V9.1 client can be obtained from: http://www-01.ibm.com/support/docview.wss?uid=swg24044791
+
+The MQ V9.2 client can be obtained from: https://ibm.biz/mq92clients
+
+The MQ V9.3 client can be obtained from: https://ibm.biz/mq93clients
 
 
 ### Pre-reqs for enabling TLS communication
