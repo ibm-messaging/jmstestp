@@ -10,10 +10,10 @@ The C version of this testharness using MQI interfaces is available here: https:
 You will need to separately download the MQ Client (for which license agreement is required) and copy the following files into the root directory before building your docker image:
 * /lap/
 *  mqlicense.sh
-*  ibmmq-client_9.1.0.0_amd64.deb
-*  ibmmq-runtime_9.1.0.0_amd64.deb
-*  ibmmq-java_9.1.0.0_amd64.deb
-*  ibmmq-gskit_9.1.0.0_amd64.deb
+*  ibmmq-client_9.x.x.x_amd64.deb
+*  ibmmq-runtime_9.x.x.x_amd64.deb
+*  ibmmq-java_9.x.x.x_amd64.deb
+*  ibmmq-gskit_9.x.x.x_amd64.deb
 
 The MQ V9 client can be obtained from: http://www-01.ibm.com/support/docview.wss?uid=swg24042176
 
@@ -23,6 +23,7 @@ The MQ V9.2 client can be obtained from: https://ibm.biz/mq92clients
 
 The MQ V9.3 client can be obtained from: https://ibm.biz/mq93clients
 
+For the above downloads, filter the fixpack selection platform to Linux 64 bit, x86_64, and select the IBM-MQC-UbuntuLinuxX64 download.
 
 ### Pre-reqs for enabling TLS communication
 If you wish to enable TLS communication between the container and your QM you will need to:
