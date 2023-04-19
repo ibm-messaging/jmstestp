@@ -67,10 +67,10 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 
 RUN export DEBIAN_FRONTEND=noninteractive \
   && ./mqlicense.sh -accept \
-  && dpkg -i ibmmq-runtime_9.3.1.0_amd64.deb \
-  && dpkg -i ibmmq-java_9.3.1.0_amd64.deb \
-  && dpkg -i ibmmq-gskit_9.3.1.0_amd64.deb \
-  && dpkg -i ibmmq-client_9.3.1.0_amd64.deb 
+  && dpkg -i ibmmq-runtime_9.3.2.0_amd64.deb \
+  && dpkg -i ibmmq-java_9.3.2.0_amd64.deb \
+  && dpkg -i ibmmq-gskit_9.3.2.0_amd64.deb \
+  && dpkg -i ibmmq-client_9.3.2.0_amd64.deb 
 
 
 WORKDIR /home/mqperf/jms
