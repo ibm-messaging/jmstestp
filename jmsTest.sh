@@ -144,7 +144,7 @@ fi
 
 #Launch monitoring processes
 mpstat 10 > /tmp/mpstat &
-dstat --output /tmp/dstat 10 > /dev/null 2>&1 &
+pcp dstat --output /tmp/dstat 10 > /dev/null 2>&1 &
 if [ -n "${MQ_USERID}" ]; then
   ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/system 2>/tmp/systemerr &
   ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/disklog 2>/tmp/disklogerr &
@@ -200,6 +200,7 @@ if [ -n "${MQ_DATA}" ] && [ ${MQ_DATA} -eq 1 ]; then
   cat /tmp/disklog
   cat /tmp/nhalog  
   cat /home/mqperf/jms/output
+  env | sort
 fi
 
 if [ -n "${MQ_ERRORS}" ]; then

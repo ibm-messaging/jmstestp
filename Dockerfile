@@ -46,7 +46,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     sysstat \
     procps \
     apt-utils \
-    dstat \
+    pcp \
     vim \
     iproute2 \
   # Apply any bug fixes not included in base Ubuntu or MQ image.
@@ -58,19 +58,25 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   # Optional: Update the command prompt with the MQ version
   && echo "jms" > /etc/debian_chroot \
   && sed -i 's/password\t\[success=1 default=ignore\]\tpam_unix\.so obscure sha512/password\t[success=1 default=ignore]\tpam_unix.so obscure sha512 minlen=8/' /etc/pam.d/common-password \
-  && groupadd --system --gid 999 mqm \
-  && useradd --system --uid 999 --gid mqm mqperf \
+  && groupadd --system --gid 1000 mqm \
+  && useradd --system --uid 1000 --gid mqm mqperf \
+  && usermod -a -G root mqperf \
   && echo mqperf:orland02 | chpasswd \
   && mkdir -p /home/mqperf/jms \
-  && chown -R mqperf /home/mqperf/jms \
-  && echo "cd ~/jms" >> /home/mqperf/.bashrc
+  && chown -R mqperf:root /home/mqperf/jms \
+  && chmod -R g+w /home/mqperf/jms \
+  && echo "cd ~/jms" >> /home/mqperf/.bashrc \
+  && service pmcd start
 
 RUN export DEBIAN_FRONTEND=noninteractive \
   && ./mqlicense.sh -accept \
   && dpkg -i ibmmq-runtime_9.3.2.0_amd64.deb \
   && dpkg -i ibmmq-java_9.3.2.0_amd64.deb \
   && dpkg -i ibmmq-gskit_9.3.2.0_amd64.deb \
-  && dpkg -i ibmmq-client_9.3.2.0_amd64.deb 
+  && dpkg -i ibmmq-client_9.3.2.0_amd64.deb \
+  && chown -R mqperf:root /opt/mqm/* \
+  && chown -R mqperf:root /var/mqm/* \
+  && chmod o+w /var/mqm
 
 
 WORKDIR /home/mqperf/jms
