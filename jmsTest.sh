@@ -70,7 +70,7 @@ function setupTLS {
 
   #Create local CCDT; alternatives are to copy it from Server or host it at http location
   mqicipher="${MQ_TLS_CIPHER:-TLS_RSA_WITH_AES_256_GCM_SHA384}"
-  echo "DEFINE CHANNEL('$channel') CHLTYPE(CLNTCONN) CONNAME('$host($port)') SSLCIPH($mqicipher) QMNAME($qmname) REPLACE" | /opt/mqm/bin/runmqsc -n >> /home/mqperf/jms/output 2>&1
+  echo "DEFINE CHANNEL('$channel') CHLTYPE(CLNTCONN) CONNAME('$host($port)') SSLCIPH($mqicipher) QMNAME($qmname) CERTLABL('${MQ_TLS_CERTLABEL}') REPLACE" | /opt/mqm/bin/runmqsc -n >> /home/mqperf/jms/output 2>&1
 }
 
 echo "----------------------------------------"
@@ -146,13 +146,24 @@ fi
 mpstat 10 > /tmp/mpstat &
 pcp dstat --output /tmp/dstat 10 > /dev/null 2>&1 &
 if [ -n "${MQ_USERID}" ]; then
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/system 2>/tmp/systemerr &
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/disklog 2>/tmp/disklogerr &
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${mqicipher} >/tmp/nhalog 2>/tmp/nhalogerr &
+  if [ -n "${MQ_TLS_CIPHER}" ]; then
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/system 2>/tmp/systemerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/disklog 2>/tmp/disklogerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/nhalog 2>/tmp/nhalogerr &
+  else
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/system 2>/tmp/systemerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/disklog 2>/tmp/disklogerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/nhalog 2>/tmp/nhalogerr &  fi
 else
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -l ${mqicipher} >/tmp/system 2>/tmp/systemerr &
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -l ${mqicipher} >/tmp/disklog 2>/tmp/disklogerr &
-  ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -l ${mqicipher} >/tmp/nhalog 2>/tmp/nhalogerr &
+  if [ -n "${MQ_TLS_CIPHER}" ]; then
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/system 2>/tmp/systemerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/disklog 2>/tmp/disklogerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/nhalog 2>/tmp/nhalogerr &
+  else
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary >/tmp/system 2>/tmp/systemerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log >/tmp/disklog 2>/tmp/disklogerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + >/tmp/nhalog 2>/tmp/nhalogerr &
+  fi
 fi
 
 #Write CSV header if required
