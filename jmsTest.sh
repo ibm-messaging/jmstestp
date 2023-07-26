@@ -103,7 +103,7 @@ echo "----------------------------------------"
 
 echo "Testing QM: $qmname on host: $host using port: $port and channel: $channel" | tee -a /home/mqperf/jms/results 
 
-echo "Using the following message sizes:" | tee -a /home/mqperf/jms/results
+echo -n "Using the following message sizes: " | tee -a /home/mqperf/jms/results
 for messageSize in ${msgsizestring}; do
   echo "$messageSize" | tee -a /home/mqperf/jms/results 
 done
