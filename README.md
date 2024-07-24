@@ -114,9 +114,9 @@ To run JMS tests with TLS configured, we will need the CCDT configured locally a
 
 
 ## Version information
-The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base docker image is IBMs Java 1.8 which uses Ubuntu 16.04. 
+The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base docker image is IBMs Java 1.8 which uses Ubuntu 22.04. 
 
-The current level of Java is Java 8 SR5 FP27. This level of Java contains the full strength cryptography suites without additional modification. If you use an older version of Java you may need to configure it to use the strongest ciphers if supported within your geography. See: https://www.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.nd.multiplatform.doc/ae/tsec_egs.html for more details.
+The current level of Java is Java 8 SR8 FP26. This level of Java contains the full strength cryptography suites without additional modification. If you use an older version of Java you may need to configure it to use the strongest ciphers if supported within your geography. See: https://www.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.nd.multiplatform.doc/ae/tsec_egs.html for more details.
 
 Information on IBM's Java for Docker can be found here:
 https://hub.docker.com/_/ibmjava/
