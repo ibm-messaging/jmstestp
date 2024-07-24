@@ -23,6 +23,8 @@ The MQ V9.2 client can be obtained from: https://ibm.biz/mq92clients
 
 The MQ V9.3 client can be obtained from: https://ibm.biz/mq93clients
 
+The MQ V9.r43 client can be obtained from: https://ibm.biz/mq94clients
+
 For the above downloads, filter the fixpack selection platform to Linux 64 bit, x86_64, and select the IBM-MQC-UbuntuLinuxX64 download.
 
 ### Pre-reqs for enabling TLS communication
