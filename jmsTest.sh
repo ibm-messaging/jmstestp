@@ -210,12 +210,13 @@ if [ -n "${MQ_DATA}" ] && [ ${MQ_DATA} -eq 1 ]; then
   cat /tmp/system
   cat /tmp/disklog
   cat /tmp/nhalog  
-  cat /home/mqperf/jms/output
   env | sort
 fi
 
 if [ -n "${MQ_ERRORS}" ]; then
+  cat /home/mqperf/jms/output
   cat /var/mqm/errors/AMQERR01.LOG
+  env | sort
 fi
 
 if [ -n "${MQ_RESULTS_CSV}" ]; then
