@@ -38,7 +38,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     lsb-release \
     mount \
     passwd \
-    procps \
     sed \
     tar \
     util-linux \
