@@ -1,13 +1,13 @@
 # jmstestp
-Environment for creating a docker image running JMS performance tests for Persistent and Non Persistent messaging.
+Environment for creating a container image running JMS performance tests for Persistent and Non Persistent messaging.
 
-This repository contains a set of files to help create a Docker image containing the JMSPerfHarness jar, IBM's Java 1.8 and a set of scripts to run an inital set of performance tests.
+This repository contains a set of files to help create a container image containing the JMSPerfHarness jar, IBM's Java 1.8 and a set of scripts to run an inital set of performance tests.
 
 The C version of this testharness using MQI interfaces is available here: https://github.com/ibm-messaging/cphtestp
 
 
 ## Pre-requisites
-You will need to separately download the MQ Client (for which license agreement is required) and copy the following files into the root directory before building your docker image:
+You will need to separately download the MQ Client (for which license agreement is required) and copy the following files into the root directory before building your container image:
 * /lap/
 *  mqlicense.sh
 *  ibmmq-client_9.x.x.x_amd64.deb
@@ -40,8 +40,8 @@ You can quickly configure those queues using the [createq.mqsc](createq.mqsc) ru
 If you wish to clear the queues manually then you can also do that using the [clearq.mqsc](clearq.mqsc) script.
 
 
-## Build and run as a standalone Docker container
-You can perform a docker build as normal:
+## Build and run as a standalone container
+You can perform a container build as normal:
 
 `docker build --tag jmstestp .`
 
@@ -49,7 +49,7 @@ then run in network host mode to connect and run tests against a local QM:
 
 `docker run -it --detach --net="host" jmstestp`
 
-The default configuration looks for a QM located on the localhost called PERF0 with a listener configured on port 1420. The clients will send and receive persistent messages. You can override a number of options by setting environment variables on the docker run command.
+The default configuration looks for a QM located on the localhost called PERF0 with a listener configured on port 1420. The clients will send and receive persistent messages. You can override a number of options by setting environment variables on the container run command.
 
 `docker run -it --detach --net="host" --env MQ_QMGR_NAME=PERF1 --env MQ_QMGR_HOSTNAME=10.0.0.1 --env MQ_QMGR_PORT=1414 jmstestp`
 
@@ -90,7 +90,7 @@ In the latest release further configuration options have been added. The table b
 The container will run a number of tests using different numbers of threads with messages of 2K, 20K and 200K. The scenario is a Request/Responder scenario as featured in the latest xLinux and Appliance performance reports available here:
 https://ibm-messaging.github.io/mqperf/
 
-When the testing is complete the final results will be posted to the docker logs and can be viewed in the normal way:
+When the testing is complete the final results will be posted to the container logs and can be viewed in the normal way:
 
 `docker logs <containerID>`
 
@@ -114,7 +114,7 @@ To run JMS tests with TLS configured, we will need the CCDT configured locally a
 
 
 ## Version information
-The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base docker image is IBMs Java 1.8 which uses Ubuntu 22.04. 
+The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base container image is IBMs Java 1.8 which uses Ubuntu 22.04. 
 
 The current level of Java is Java 8 SR8 FP26. This level of Java contains the full strength cryptography suites without additional modification. If you use an older version of Java you may need to configure it to use the strongest ciphers if supported within your geography. See: https://www.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.nd.multiplatform.doc/ae/tsec_egs.html for more details.
 
