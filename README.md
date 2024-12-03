@@ -69,6 +69,7 @@ In the latest release further configuration options have been added. The table b
 | MQ_QMGR_HOSTNAME        | Hostname where QM is running                         | localhost          |
 | MQ_QMGR_PORT            | Port where QM listener is running                    | 1420               |
 | MQ_QMGR_CHANNEL         | Channel name to use to connect to QM                 | SYSTEM.DEF.SVRCONN |
+| MQ_FIXED_CLIENTS        | Specify a fixed number of requester clients to use   | 1 2 4 8 ... \<responder threads\> |
 | MQ_RESPONDER_THREADS    | Number of responder threads to run                   | 200                |
 | MQ_MSGSIZE              | Message sizes to test                                | 2048:20480:204800  |
 | MQ_QMGR_QREQUEST_PREFIX | Prefix of request queues to use.                     | REQUEST            |
