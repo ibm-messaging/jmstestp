@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ibmjava:8-jre
+# FROM ibmjava:8-jre
+FROM icr.io/appcafe/ibmjava:8-jre
 
 LABEL maintainer "Sam Massey <smassey@uk.ibm.com>"
 
+# Copy MQ install files
 COPY *.deb /
 COPY mqlicense.sh /
 COPY lap /lap
 
+# Install required packages
 RUN export DEBIAN_FRONTEND=noninteractive \
   # Install additional packages - do we need/want them all
   && apt-get update -y \
@@ -47,38 +50,32 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     apt-utils \
     pcp \
     vim \
-    iproute2 \
-  # Apply any bug fixes not included in base Ubuntu or MQ image.
-  # Don't upgrade everything based on Docker best practices https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#run
-  && apt-get upgrade -y libkrb5-26-heimdal \
-  && apt-get upgrade -y libexpat1 \
-  # End of bug fixes
+    iproute2
+
+# Create mqm and mqperf users before installing MQ
+RUN export DEBIAN_FRONTEND=noninteractive \
   && rm -rf /var/lib/apt/lists/* \
-  # Optional: Update the command prompt with the MQ version
-  && echo "jms" > /etc/debian_chroot \
-  && sed -i 's/password\t\[success=1 default=ignore\]\tpam_unix\.so obscure sha512/password\t[success=1 default=ignore]\tpam_unix.so obscure sha512 minlen=8/' /etc/pam.d/common-password \
-  && groupadd --system --gid 1000 mqm \
-  && useradd --system --uid 1000 --gid mqm mqperf \
-  && usermod -a -G root mqperf \
-  && echo mqperf:orland02 | chpasswd \
+  && groupadd --system --gid 30000 mqm \
+  && useradd --system --uid 900 --gid mqm mqm \
+  && useradd --uid 30000 --gid mqm mqperf \
   && mkdir -p /home/mqperf/jms \
-  && chown -R mqperf:root /home/mqperf/jms \
-  && chmod -R g+w /home/mqperf/jms \
+  # Update the command prompt with the container name, login and cwd
+  && echo "export PS1='jmstestp:\u@\h:\w\$ '" >> /home/mqperf/.bashrc \
   && echo "cd ~/jms" >> /home/mqperf/.bashrc \
   && service pmcd start
 
+# MQ must be installed as root
+# By running script, you accept the MQ client license, run ./mqlicense.sh -view to view license
+ENV MQLICENSE=accept
 RUN export DEBIAN_FRONTEND=noninteractive \
   && ./mqlicense.sh -accept \
   && dpkg -i ibmmq-runtime_9.4.0.0_amd64.deb \
   && dpkg -i ibmmq-java_9.4.0.0_amd64.deb \
   && dpkg -i ibmmq-gskit_9.4.0.0_amd64.deb \
-  && dpkg -i ibmmq-client_9.4.0.0_amd64.deb \
-  && chown -R mqperf:root /opt/mqm/* \
-  && chown -R mqperf:root /var/mqm/* \
-  && chmod o+w /var/mqm
+  && dpkg -i ibmmq-client_9.4.0.0_amd64.deb
 
-
-WORKDIR /home/mqperf/jms
+# Copy all TLS, config and script files to the image
+USER mqperf
 COPY ssl/* /opt/mqm/ssl/
 COPY ssljks/* /tmp/
 COPY *.jar /home/mqperf/jms/
@@ -86,11 +83,14 @@ COPY *.sh /home/mqperf/jms/
 COPY *.mqsc /home/mqperf/jms/
 COPY qmmonitor2 /home/mqperf/jms/
 
+# Update ownership of files
+USER root
 RUN export DEBIAN_FRONTEND=noninteractive \
   && chown -R mqperf:mqm /opt/mqm/ssl \
-  && chown -R mqperf:mqm /tmp
-USER mqperf
+  && chown -R mqperf:mqm /home/mqperf/jms
 
+USER mqperf
+WORKDIR /home/mqperf/jms
 ENV MQ_QMGR_NAME=PERF0
 ENV MQ_QMGR_PORT=1420
 ENV MQ_QMGR_CHANNEL=SYSTEM.DEF.SVRCONN
