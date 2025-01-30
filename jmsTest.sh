@@ -36,9 +36,9 @@ function runclients {
 }
 
 function getConcurrentClientsArray {
-if  ! [ -z "${MQ_FIXED_CLIENTS}" ]; then
+if  [ -n "${MQ_FIXED_CLIENTS}" ]; then
   clientsArray=(${MQ_FIXED_CLIENTS})
-else  
+else
   maximumClients=$1
   #maximumClients=`expr ${maximumClients} - 2`
   for (( i=1; i<$maximumClients; i=$i*2 ))
@@ -134,13 +134,13 @@ if ! ( [ -n "{MQ_CLEAR_QUEUES}" ] && [ "${MQ_CLEAR_QUEUES}" = "N" ] ); then
     # Need to flow userid and password to runmqsc
     echo "Using userid: ${MQ_USERID}" | tee -a /home/mqperf/jms/results
     echo ${MQ_PASSWORD} > /tmp/clearq.mqsc;
-    cat /home/mqperf/jms/clearq.mqsc >> /tmp/clearq.mqsc;  
+    cat /home/mqperf/jms/clearq.mqsc >> /tmp/clearq.mqsc;
     cat /tmp/clearq.mqsc | /opt/mqm/bin/runmqsc -c -u ${MQ_USERID} -w 60 $qmname > /home/mqperf/jms/output 2>&1;
     rm -f /tmp/clearq.mqsc;
   else
     cat /home/mqperf/jms/clearq.mqsc | /opt/mqm/bin/runmqsc -c $qmname > /home/mqperf/jms/output 2>&1;
   fi
-fi  
+fi
 
 #Launch monitoring processes
 mpstat 10 > /tmp/mpstat &
@@ -150,19 +150,23 @@ if [ -n "${MQ_USERID}" ]; then
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/system 2>/tmp/systemerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/disklog 2>/tmp/disklogerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/nhalog 2>/tmp/nhalogerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t RECOVERY -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/nhacrrlog 2>/tmp/nhacrrlogerr &
   else
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/system 2>/tmp/systemerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/disklog 2>/tmp/disklogerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/nhalog 2>/tmp/nhalogerr &  fi
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t RECOVERY -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/nhacrrlog 2>/tmp/nhacrrlogerr &  fi
 else
   if [ -n "${MQ_TLS_CIPHER}" ]; then
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/system 2>/tmp/systemerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/disklog 2>/tmp/disklogerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/nhalog 2>/tmp/nhalogerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t RECOVERY -o + -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/nhacrrlog 2>/tmp/nhacrrlogerr &
   else
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary >/tmp/system 2>/tmp/systemerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log >/tmp/disklog 2>/tmp/disklogerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + >/tmp/nhalog 2>/tmp/nhalogerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t RECOVERY -o + >/tmp/nhacrrlog 2>/tmp/nhacrrlogerr &
   fi
 fi
 
@@ -209,7 +213,8 @@ fi
 if [ -n "${MQ_DATA}" ] && [ ${MQ_DATA} -eq 1 ]; then
   cat /tmp/system
   cat /tmp/disklog
-  cat /tmp/nhalog  
+  cat /tmp/nhalog
+  cat /tmp/nhacrrlog
   env | sort
 fi
 
