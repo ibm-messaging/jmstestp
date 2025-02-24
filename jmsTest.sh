@@ -154,8 +154,9 @@ if [ -n "${MQ_USERID}" ]; then
   else
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/system 2>/tmp/systemerr &
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c DISK -t Log -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/disklog 2>/tmp/disklogerr &
-    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/nhalog 2>/tmp/nhalogerr &  fi
-    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t RECOVERY -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/nhacrrlog 2>/tmp/nhacrrlogerr &  fi
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t REPLICATION -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/nhalog 2>/tmp/nhalogerr &
+    ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c NHAREPLICA -t RECOVERY -o + -u ${MQ_USERID} -v ${MQ_PASSWORD} >/tmp/nhacrrlog 2>/tmp/nhacrrlogerr &
+  fi
 else
   if [ -n "${MQ_TLS_CIPHER}" ]; then
     ./qmmonitor2 -m $qmname -p $port -s $channel -h $host -c CPU -t SystemSummary -l ${MQ_TLS_CIPHER} -w ${MQ_TLS_CERTLABEL} >/tmp/system 2>/tmp/systemerr &
