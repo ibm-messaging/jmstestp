@@ -205,7 +205,70 @@ for messageSize in ${msgsizestring}; do
 done
 unset IFS
 
+#Always dump logger stats
+echo "Logger Summary" >> /home/mqperf/jms/results
+slowest_write=$(cat /tmp/disklog | grep "slowest write since restart" | awk '{print $7}' | tail -1)
+echo "Slowest write since QM restart: $slowest_write microsecs" >> /home/mqperf/jms/results
+slowest_write_timestamp=$(cat /tmp/disklog | grep "timestamp of slowest write" | awk '{print $7}' | tail -1)
+echo "Slowest write timestamp: $slowest_write_timestamp microsecs since epoch" >> /home/mqperf/jms/results
+max_latency=$(cat /tmp/disklog | grep "write latency" | awk '{print $5}' | sort -n | tail -1)
+echo "Highest log write latency: $max_latency microsecs" >> /home/mqperf/jms/results
+max_write_size=$(cat /tmp/disklog | grep "write size" | awk '{print $5}' | sort -n | tail -1)
+echo "Highest log write size: $max_write_size bytes" >> /home/mqperf/jms/results
+max_phys_write=$(cat /tmp/disklog | grep "physical bytes" | awk '{print $7}' | sort -n | tail -1)
+echo "Max physical write throughput (bytes): $max_phys_write" >> /home/mqperf/jms/results
+min_log_free_space=$(cat /tmp/disklog | grep "Log file system - free space" | awk '{print $7}' | sort -n | head -1)
+echo "Min Log free space: $min_log_free_space" >> /home/mqperf/jms/results
+max_log_bytes_in_use=$(cat /tmp/disklog | grep "Log file system - bytes in use" | awk '{print $8}' | sort -n | tail -1)
+echo "Max log bytes in use: $max_log_bytes_in_use" >> /home/mqperf/jms/results
 echo "" >> /home/mqperf/jms/results
+
+#Check if we have an active NHA log file
+nha_log_lines=$(cat /tmp/nhalog | wc -l)
+if [[ $nha_log_lines -gt 2 ]]; then
+  echo "NHA Summary (across all replicas)" >> /home/mqperf/jms/results
+  max_sync_log_bytes=$(cat /tmp/nhalog | grep "Synchronous log bytes sent" | awk '{print $7}' | sort -n | tail -1)
+  echo "Max sync log bytes: $max_sync_log_bytes" >> /home/mqperf/jms/results
+  max_sync_comp_log_bytes=$(cat /tmp/nhalog | grep "Synchronous compressed log bytes sent" | awk '{print $8}' | sort -n | tail -1)
+  echo "Max sync compressed log bytes: $max_sync_comp_log_bytes" >> /home/mqperf/jms/results
+  max_catch_up_log_bytes=$(cat /tmp/nhalog | grep "Catch-up log bytes sent" | awk '{print $6}' | sort -n | tail -1)
+  echo "Max catch up log bytes: $max_catch_up_log_bytes" >> /home/mqperf/jms/results
+  max_backlog_bytes=$(cat /tmp/nhalog | grep "Backlog bytes" | awk '{print $4}' | sort -n | tail -1)
+  echo "NHA Max backlog bytes: $max_backlog_bytes" >> /home/mqperf/jms/results
+  max_nha_rtt=$(cat /tmp/nhalog | grep "Average network round trip time" | awk '{print $7}' | tail -1)
+  echo "Max (of average) network round trip time: $max_nha_rtt microsecs" >> /home/mqperf/jms/results
+  max_log_write_ack_lat=$(cat /tmp/nhalog | grep "Log write average acknowledgement latency" | awk '{print $7}' | sort -n | tail -1)
+  echo "Max (of average) log write ack latency: $max_log_write_ack_lat microsecs" >> /home/mqperf/jms/results
+  min_qmgr_free_space=$(cat /tmp/nhalog | grep "Queue Manager file system - free space" | awk '{print $9}' | sort -n | head -1)
+  echo "Min QMgr free space: $min_qmgr_free_space" >> /home/mqperf/jms/results
+  max_qmgr_bytes_in_use=$(cat /tmp/nhalog | grep "Queue Manager file system - bytes in use" | awk '{print $10}' | sort -n | tail -1)
+  echo "Max QMgr bytes in use: $max_qmgr_bytes_in_use" >> /home/mqperf/jms/results
+  min_log_free_space=$(cat /tmp/nhalog | grep "Log file system - free space" | awk '{print $8}' | sort -n | head -1)
+  echo "Min Log free space: $min_log_free_space" >> /home/mqperf/jms/results
+  max_log_bytes_in_use=$(cat /tmp/nhalog | grep "Log file system - bytes in use" | awk '{print $9}' | sort -n | tail -1)
+  echo "Max log bytes in use: $max_log_bytes_in_use" >> /home/mqperf/jms/results
+  echo "" >> /home/mqperf/jms/results
+fi
+
+#Check if we have an active NHA CRR log file
+nha_log_lines=$(cat /tmp/nhacrrlog | wc -l)
+if [[ $nha_log_lines -gt 2 ]]; then
+  echo "NHA:CRR Summary" >> /home/mqperf/jms/results
+  max_async_log_bytes=$(cat /tmp/nhacrrlog | grep "Log bytes sent" | awk '{print $6}' | sort -n | tail -1)
+  echo "Max async log bytes: $max_async_log_bytes" >> /home/mqperf/jms/results
+  max_backlog_bytes=$(cat /tmp/nhacrrlog | grep "Backlog bytes" | awk '{print $4}' | sort -n | tail -1)
+  echo "NHA:CRR Max backlog bytes: "$max_backlog_bytes >> /home/mqperf/jms/results
+  max_avg_backlog_bytes=$(cat /tmp/nhacrrlog | grep "Backlog average bytes" | awk '{print $5}' | sort -n | tail -1)
+  echo "NHA:CRR Max (of average) backlog bytes: "$max_avg_backlog_bytes >> /home/mqperf/jms/results
+  lowest_rebase_count=$(cat /tmp/nhacrrlog | grep "Rebase count" | awk '{print $4}' | head -1)
+  echo "Rebase count start: "$lowest_rebase_count >> /home/mqperf/jms/results
+  rebase_count=$(cat /tmp/nhacrrlog | grep "Rebase count" | awk '{print $4}' | tail -1)
+  echo "Rebase count end: "$rebase_count >> /home/mqperf/jms/results
+  max_nhacrr_rtt=$(cat /tmp/nhacrrlog | grep "Average network round trip" | awk '{print $7}' | sort -n | tail -1)
+  echo "Max (of average) network round trip time: $max_nhacrr_rtt microsec" >> /home/mqperf/jms/results
+  echo "" >> /home/mqperf/jms/results
+fi
+
 
 if ! [ "${MQ_RESULTS}" = "FALSE" ]; then
   cat /home/mqperf/jms/results
