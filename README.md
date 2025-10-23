@@ -126,7 +126,7 @@ The current level of Java is IBM Semeru Runtime Open Edition 21.0.8.0 (build 21.
 Information on IBM's Java for Docker can be found here:
 https://hub.docker.com/_/ibmjava/
 
-Information on IBM Semeru runtimes and where
+Information on IBM Semeru runtimes and how to determine the correct base image to build from:
 https://www.ibm.com/support/pages/semeru-runtimes-installation
 
 The most up to date JMSPerfHarness code can be found here:
