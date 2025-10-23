@@ -45,6 +45,10 @@ You can perform a container build as normal:
 
 `docker build --tag jmstestp .`
 
+To build the Ubuntu image, use the Dockerfile.ubuntu:
+
+`docker build -f ./Dockerfile.ubuntu --tag jmstestp .`
+
 then run in network host mode to connect and run tests against a local QM:
 
 `docker run -it --detach --net="host" jmstestp`
