@@ -16,48 +16,72 @@
 # curl -s https://icr.io/v2/appcafe/ibmjava/tags/list | jq .tags
 # FROM icr.io/appcafe/ibmjava:8-jre
 
+
 # Obtain list of semuru runtime tags
 # curl -s https://icr.io/v2/appcafe/ibm-semeru-runtimes/tags/list | jq .tags
-FROM icr.io/appcafe/ibm-semeru-runtimes:open-21-jre-ubi9
+# FROM icr.io/appcafe/ibm-semeru-runtimes:open-21-jre-ubi9-amd64
 
-# Or for Ubuntu (see Dockerfile.ubuntu)
-# FROM icr.io/appcafe/ibm-semeru-runtimes:open-21-jre-jammy-amd64
+# Or for Ubuntu
+FROM icr.io/appcafe/ibm-semeru-runtimes:open-21-jre-jammy-amd64
 
 LABEL maintainer "Sam Massey <smassey@uk.ibm.com>"
 
 # Copy MQ install files
-COPY *.rpm /
+COPY *.deb /
 COPY mqlicense.sh /
 COPY lap /lap
 
-USER root
-RUN rm -f /var/lib/rpm/.rpm.lock
-
-# Add centos Appstream repo and import keys
-COPY centos.repo /etc/yum.repos.d
-RUN rpm --import https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256
-
 # Install required packages
-RUN dnf install -y wget bc file procps iputils sysstat procps pcp pcp-system-tools vim \
-  && dnf update -y \
-  && dnf clean all \
+RUN export DEBIAN_FRONTEND=noninteractive \
+  # Install additional packages - do we need/want them all
+  && apt-get update -y \
+  && apt-get install -y --no-install-recommends \
+    bash \
+    bc \
+    ca-certificates \
+    coreutils \
+    curl \
+    debianutils \
+    file \
+    findutils \
+    gawk \
+    grep \
+    libc-bin \
+    lsb-release \
+    mount \
+    passwd \
+    sed \
+    tar \
+    util-linux \
+    iputils-ping \
+    sysstat \
+    procps \
+    apt-utils \
+    pcp \
+    vim \
+    iproute2
+
 # Create mqm and mqperf users before installing MQ
+RUN export DEBIAN_FRONTEND=noninteractive \
+  && rm -rf /var/lib/apt/lists/* \
   && groupadd --system --gid 30000 mqm \
   && useradd --system --uid 900 --gid mqm mqm \
   && useradd --uid 30000 --gid mqm mqperf \
   && mkdir -p /home/mqperf/jms \
   # Update the command prompt with the container name, login and cwd
   && echo "export PS1='jmstestp:\u@\h:\w\$ '" >> /home/mqperf/.bashrc \
-  && echo "cd ~/jms" >> /home/mqperf/.bashrc
+  && echo "cd ~/jms" >> /home/mqperf/.bashrc \
+  && service pmcd start
 
 # MQ must be installed as root
 # By running script, you accept the MQ client license, run ./mqlicense.sh -view to view license
 ENV MQLICENSE=accept
-RUN ./mqlicense.sh -accept \
-  && rpm -Uvh MQSeriesRuntime-9.4.4-0.x86_64.rpm \
-  && rpm -Uvh MQSeriesGSKit-9.4.4-0.x86_64.rpm \
-  && rpm -Uvh MQSeriesClient-9.4.4-0.x86_64.rpm \
-  && rpm -Uvh MQSeriesJava-9.4.4-0.x86_64.rpm
+RUN export DEBIAN_FRONTEND=noninteractive \
+  && ./mqlicense.sh -accept \
+  && dpkg -i ibmmq-runtime_9.4.0.0_amd64.deb \
+  && dpkg -i ibmmq-java_9.4.0.0_amd64.deb \
+  && dpkg -i ibmmq-gskit_9.4.0.0_amd64.deb \
+  && dpkg -i ibmmq-client_9.4.0.0_amd64.deb
 
 # Copy all TLS, config and script files to the image
 USER mqperf
@@ -70,7 +94,8 @@ COPY qmmonitor2 /home/mqperf/jms/
 
 # Update ownership of files
 USER root
-RUN chown -R mqperf:mqm /opt/mqm/ssl \
+RUN export DEBIAN_FRONTEND=noninteractive \
+  && chown -R mqperf:mqm /opt/mqm/ssl \
   && chown -R mqperf:mqm /home/mqperf/jms
 
 USER mqperf
