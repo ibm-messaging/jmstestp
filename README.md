@@ -1,7 +1,7 @@
 # jmstestp
 Environment for creating a container image running JMS performance tests for Persistent and Non Persistent messaging.
 
-This repository contains a set of files to help create a container image containing the JMSPerfHarness jar, IBM's Java 1.8 and a set of scripts to run an inital set of performance tests.
+This repository contains a set of files to help create a container image containing the JMSPerfHarness jar, IBM's Semeru Runtime Java21 on a UBI9 image, and a set of scripts to run an inital set of performance tests.
 
 The C version of this testharness using MQI interfaces is available here: https://github.com/ibm-messaging/cphtestp
 
@@ -25,7 +25,7 @@ The MQ V9.3 client can be obtained from: https://ibm.biz/mq93clients
 
 The MQ V9.4 client can be obtained from: https://ibm.biz/mq94clients
 
-For the above downloads, filter the fixpack selection platform to Linux 64 bit, x86_64, and select the IBM-MQC-UbuntuLinuxX64 download.
+For the above downloads, filter the fixpack selection platform to Linux 64 bit, x86_64, and select the 9.4.x.0-IBM-MQC-LinuxX64 or IBM-MQC-UbuntuLinuxX64 for download, for creating a RHEL/UBI or Ubuntu image
 
 ### Pre-reqs for enabling TLS communication
 If you wish to enable TLS communication between the container and your QM you will need to:
@@ -115,12 +115,15 @@ To run JMS tests with TLS configured, we will need the CCDT configured locally a
 
 
 ## Version information
-The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base container image is IBMs Java 1.8 which uses Ubuntu 22.04. 
+The version of the JMSPerfHarness jar contained in this image was taken on 15th February 2018 and compiled with Java 1.8. The base container image is IBMs Semeru Runtime Java 21 on a UBI(RHEL)9 base. 
 
-The current level of Java is Java 8 SR8 FP26. This level of Java contains the full strength cryptography suites without additional modification. If you use an older version of Java you may need to configure it to use the strongest ciphers if supported within your geography. See: https://www.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.nd.multiplatform.doc/ae/tsec_egs.html for more details.
+The current level of Java is IBM Semeru Runtime Open Edition 21.0.8.0 (build 21.0.8+9-LTS). This level of Java contains the full strength cryptography suites without additional modification. If you use an older version of Java you may need to configure it to use the strongest ciphers if supported within your geography. See: https://www.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.nd.multiplatform.doc/ae/tsec_egs.html for more details.
 
 Information on IBM's Java for Docker can be found here:
 https://hub.docker.com/_/ibmjava/
+
+Information on IBM Semeru runtimes and where
+https://www.ibm.com/support/pages/semeru-runtimes-installation
 
 The most up to date JMSPerfHarness code can be found here:
 https://github.com/ot4i/perf-harness
